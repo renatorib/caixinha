@@ -1,8 +1,8 @@
-### Caixa
+# Caixa
 
 Simple bundler for study purpose.
 
-#### Test it
+### Test it
 
 ```
 yarn ts-node src/index.ts
