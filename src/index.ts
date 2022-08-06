@@ -96,8 +96,7 @@ export const bundle = async (entry: string) => {
   `;
 
   const minified = await swc.minify(output, { compress: true });
-
-  return minified;
+  return minified.code;
 };
 
-bundle("./example/index.ts");
+bundle("./example/index.ts").then(console.log);
