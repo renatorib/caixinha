@@ -1,4 +1,4 @@
-# Caixa
+## Caixinha
 
 Simple bundler for study purpose.
 
