@@ -8,22 +8,25 @@ const readFile = util.promisify(fs.readFile);
 const createGraph = async (entry: string) => {
   let ID = 0;
 
-  type Mudule = {
+  type Module = {
     // Unique ID of module
     id: number;
     // "Browserified" code
     code: string;
-    // Mapped local imports strings to modules ids
-    mapping: Map<string, number>;
+    // Mapped local imports strings to other modules IDs
+    dependencies: Map<string, number>;
+    // Module extension
+    extension: string;
   };
 
-  let modules = new Map<string, Mudule>();
+  let modules = new Map<string, Module>();
 
   const createModule = async (filename: string) => {
     const absoluteFile = path.join(process.cwd(), filename) + (path.extname(filename) === "" ? ".ts" : "");
     const cachedModule = modules.get(absoluteFile);
 
     if (!cachedModule) {
+      const id = ID++;
       const content = await readFile(absoluteFile, "utf8");
 
       const [{ code }, ast] = await Promise.all([
@@ -31,7 +34,7 @@ const createGraph = async (entry: string) => {
         swc.parse(content, { syntax: "typescript" }),
       ]);
 
-      const mapping = new Map<string, number>();
+      const dependencies = new Map<string, number>();
 
       const imports = ast.body.filter((node): node is Extract<typeof node, { type: "ImportDeclaration" }> => {
         return node.type === "ImportDeclaration";
@@ -42,16 +45,17 @@ const createGraph = async (entry: string) => {
           return new Promise(async (resolve) => {
             const source = node.source.value;
             const mod = await createModule(path.join(path.dirname(filename), source));
-            mapping.set(source, mod.id);
+            dependencies.set(source, mod.id);
             resolve(undefined);
           });
         })
       );
 
-      const mod = {
-        id: ID++,
+      const mod: Module = {
+        id,
         code,
-        mapping,
+        dependencies,
+        extension: path.extname(absoluteFile),
       };
 
       modules.set(absoluteFile, mod);
@@ -72,9 +76,9 @@ export const bundle = async (entry: string) => {
   const output = `
     (function (modules) {
       function require(id) {
-        const [fn, mapping] = modules[id];
+        const [fn, dependencies] = modules[id];
         function localRequire(name) {
-          return require(mapping[name]);
+          return require(dependencies[name]);
         }
         const module = { exports : {} };
         fn(localRequire, module, module.exports);
@@ -88,7 +92,7 @@ export const bundle = async (entry: string) => {
             function (require, module, exports) {
               ${mod.code}
             },
-            ${JSON.stringify(Object.fromEntries(mod.mapping))}
+            ${JSON.stringify(Object.fromEntries(mod.dependencies))}
           ]`
         )
         .join(",\n")}
@@ -98,5 +102,3 @@ export const bundle = async (entry: string) => {
   const minified = await swc.minify(output, { compress: true });
   return minified.code;
 };
-
-bundle("./example/index.ts").then(console.log);
