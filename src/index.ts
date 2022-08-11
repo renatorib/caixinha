@@ -15,8 +15,6 @@ const createGraph = async (entry: string) => {
     code: string;
     // Mapped local imports strings to other modules IDs
     dependencies: Map<string, number>;
-    // Module extension
-    extension: string;
   };
 
   let modules = new Map<string, Module>();
@@ -55,7 +53,6 @@ const createGraph = async (entry: string) => {
         id,
         code,
         dependencies,
-        extension: path.extname(absoluteFile),
       };
 
       modules.set(absoluteFile, mod);
@@ -77,11 +74,11 @@ export const bundle = async (entry: string) => {
     (function (modules) {
       function require(id) {
         const [fn, dependencies] = modules[id];
-        function localRequire(name) {
+        function mappedRequire(name) {
           return require(dependencies[name]);
         }
         const module = { exports : {} };
-        fn(localRequire, module, module.exports);
+        fn(mappedRequire, module, module.exports);
         return module.exports;
       }
       require(0);
