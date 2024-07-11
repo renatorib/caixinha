@@ -3,7 +3,7 @@
 <p align="center"><b>Caixinha</b> is a tiny bundler made for a blog post teaching the concept of bundlers</p>
 
 
-<p align="center">Read the blog post here: <br /><a href="https://rena.to/blog/demystifying-bundlers">Demystifying bundlers</a></p>
+<p align="center"><a href="https://rena.to/blog/demystifying-bundlers">Read it here > Demystifying bundlers</a></p>
 
 ---
 
