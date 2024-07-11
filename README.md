@@ -2,6 +2,7 @@
 
 <p align="center">Read the blog post here: <br /><a href="https://rena.to/blog/demystifying-bundlers">Demystifying bundlers</a></p>
 
+---
 
 #### Running it
 
